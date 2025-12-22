@@ -402,35 +402,72 @@ h1 {
 }
 
 /* Attendance Management */
+.attendance-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
 .attendance-list {
-    max-height: 400px;
+    flex: 1;
     overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    padding: 0.5rem;
+    min-height: 0;
 }
 
 .attendance-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius-small);
-    margin-bottom: 0.75rem;
-    background: var(--background);
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 0.15rem;
+    background: var(--surface);
+    min-height: 32px;
+    height: 32px;
 }
 
 .attendance-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     flex: 1;
+    min-width: 0;
 }
 
 .attendance-info h4 {
-    color: var(--primary-color);
-    margin-bottom: 0.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    margin: 0;
+    min-width: 120px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.attendance-info p {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-family: 'SF Mono', Monaco, monospace;
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .attendance-controls {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
+    flex-shrink: 0;
 }
 
 .attendance-status {
@@ -439,17 +476,47 @@ h1 {
     gap: 0.5rem;
 }
 
+.attendance-status label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    white-space: nowrap;
+    height: 32px;
+}
+
+.attendance-status input[type="radio"] {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    margin: 0;
+    vertical-align: middle;
+}
+
 .attendance-reason {
-    padding: 0.5rem;
+    padding: 0.25rem 0.4rem;
     border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-small);
-    font-size: 0.9rem;
-    min-width: 150px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    min-width: 120px;
+    width: 120px;
+    height: 24px;
+    box-sizing: border-box;
+    line-height: 1.2;
+    margin: 0;
+    align-self: center;
 }
 
 .attendance-reason:disabled {
     background: var(--border-color);
     color: var(--text-muted);
+}
+
+.attendance-reason:focus {
+    outline: none;
+    border-color: var(--primary-color);
 }
 
 /* Report Preview */
@@ -460,7 +527,8 @@ h1 {
 }
 
 /* Template Modal - Extra Large */
-#template-modal .modal-content {
+#template-modal .modal-content,
+#attendance-modal .modal-content {
     max-width: 1000px;
     width: 98%;
     max-height: 95vh;
@@ -469,7 +537,8 @@ h1 {
     flex-direction: column;
 }
 
-#template-modal .modal-content h3 {
+#template-modal .modal-content h3,
+#attendance-modal .modal-content h3 {
     flex-shrink: 0;
     margin-bottom: 1rem;
 }
@@ -485,7 +554,8 @@ h1 {
     margin-bottom: 1rem;
 }
 
-#template-modal .modal-actions {
+#template-modal .modal-actions,
+#attendance-modal .modal-actions {
     flex-shrink: 0;
     margin-top: 1rem;
 }

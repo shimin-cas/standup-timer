@@ -696,7 +696,7 @@ function openAttendanceModal() {
                     </label>
                 </div>
                 <input type="text" class="attendance-reason" 
-                       placeholder="Reason for absence..." 
+                       placeholder="Reason..." 
                        value="${speaker.absentReason || ''}"
                        data-speaker-id="${speaker.id}"
                        ${speaker.isPresent ? 'disabled' : ''}>
