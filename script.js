@@ -94,6 +94,7 @@ function startMeeting() {
                 id: memberId,
                 name: member.name,
                 email: member.email,
+                team: member.team || 'No Team',
                 timeSpent: 0,
                 isPresent: true
             };
@@ -604,6 +605,43 @@ function resetMeetingUI() {
     appState.currentMeeting = null;
 }
 
+function getTeamColor(teamName) {
+    const teamColors = [
+        '#2563eb', // blue
+        '#7c3aed', // purple
+        '#059669', // green
+        '#dc2626', // red
+        '#d97706', // amber
+        '#0891b2'  // cyan
+    ];
+
+    if (!teamName) return '#6b7280';
+
+    const normalized = teamName.toLowerCase();
+    let hash = 0;
+    for (let i = 0; i < normalized.length; i++) {
+        hash = normalized.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    return teamColors[Math.abs(hash) % teamColors.length];
+}
+
+function toggleSpeakerAttendance(index) {
+    if (!appState.currentMeeting) return;
+
+    const speaker = appState.currentMeeting.speakers[index];
+    if (!speaker) return;
+
+    speaker.isPresent = !speaker.isPresent;
+    speaker.absentReason = speaker.isPresent ? '' : 'Marked absent';
+
+    if (!speaker.isPresent) {
+        speaker.timeSpent = 0;
+    }
+
+    renderSpeakerQueue();
+}
+
 function renderSpeakerQueue() {
     if (!appState.currentMeeting) return;
 
@@ -630,10 +668,17 @@ function renderSpeakerQueue() {
         }
 
         const clickHandler = speaker.isPresent ? `onclick="jumpToSpeaker(${index})"` : '';
+        const teamName = speaker.team || 'No Team';
 
         return `
             <div class="${className}" ${clickHandler}>
+                <button class="attendance-toggle-btn ${speaker.isPresent ? 'present' : 'absent'}"
+                        onclick="event.stopPropagation(); toggleSpeakerAttendance(${index})"
+                        title="${speaker.isPresent ? 'Mark absent' : 'Mark present'}">
+                    ${speaker.isPresent ? 'Present' : 'Absent'}
+                </button>
                 <div class="speaker-name">${speaker.name}</div>
+                <div class="speaker-team" style="color: ${getTeamColor(teamName)}">${teamName}</div>
                 <div class="speaker-time">${timeText}</div>
             </div>
         `;
