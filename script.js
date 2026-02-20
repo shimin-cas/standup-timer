@@ -117,11 +117,27 @@ function startMeeting() {
     document.getElementById('meeting-management').style.display = 'block';
     document.getElementById('pause-btn').disabled = false;
     document.getElementById('pause-btn').textContent = 'Start';
-    document.getElementById('next-btn').disabled = true; // Disable until timer starts
+    document.getElementById('next-btn').disabled = true;
     document.getElementById('start-meeting').disabled = true;
 
     renderSpeakerQueue();
     // Don't start timer automatically - wait for user to click Start
+}
+
+function getCurrentSpeaker() {
+    if (!appState.currentMeeting) return null;
+    return appState.currentMeeting.speakers[appState.currentMeeting.currentSpeakerIndex] || null;
+}
+
+function syncCurrentSpeakerElapsed() {
+    const speaker = getCurrentSpeaker();
+    if (!speaker) return;
+
+    if (appState.timer.isRunning && appState.timer.startTime !== null) {
+        appState.timer.elapsed = Date.now() - appState.timer.startTime;
+    }
+
+    speaker.timeSpent = Math.floor(appState.timer.elapsed / 1000);
 }
 
 function startTimer() {
@@ -148,44 +164,43 @@ function toggleTimer() {
     const nextBtn = document.getElementById('next-btn');
     
     if (appState.timer.isRunning) {
-        // Currently running - pause it
+        syncCurrentSpeakerElapsed();
         appState.timer.isRunning = false;
         btn.textContent = 'Resume';
     } else {
-        // Currently paused or not started - start/resume it
-        if (appState.timer.startTime === null) {
-            // First time starting
-            appState.timer.startTime = Date.now();
-            startTimer(); // Start the interval
-        } else {
-            // Resuming
-            appState.timer.startTime = Date.now() - appState.timer.elapsed;
+        const currentSpeaker = getCurrentSpeaker();
+        if (!currentSpeaker || !currentSpeaker.isPresent) {
+            alert('Please select a present speaker before starting the timer.');
+            return;
         }
+
+        appState.timer.elapsed = (currentSpeaker.timeSpent || 0) * 1000;
+        appState.timer.startTime = Date.now() - appState.timer.elapsed;
         appState.timer.isRunning = true;
+        startTimer();
         btn.textContent = 'Pause';
-        nextBtn.disabled = false; // Enable next speaker button once timer starts
+        nextBtn.disabled = false;
     }
+
+    renderSpeakerQueue();
 }
 
 function nextSpeaker() {
     if (!appState.currentMeeting) return;
 
+    syncCurrentSpeakerElapsed();
+
     const currentIndex = appState.currentMeeting.currentSpeakerIndex;
-    const currentSpeaker = appState.currentMeeting.speakers[currentIndex];
-    
-    // Record time for current speaker
-    currentSpeaker.timeSpent = Math.floor(appState.timer.elapsed / 1000);
-    
+
     // Move to next speaker
     if (currentIndex < appState.currentMeeting.speakers.length - 1) {
         appState.currentMeeting.currentSpeakerIndex++;
         const nextSpeaker = appState.currentMeeting.speakers[appState.currentMeeting.currentSpeakerIndex];
-        
-        // Reset timer for next speaker
-        appState.timer.startTime = Date.now();
-        appState.timer.elapsed = 0;
+
+        appState.timer.elapsed = (nextSpeaker.timeSpent || 0) * 1000;
+        appState.timer.startTime = appState.timer.isRunning ? Date.now() - appState.timer.elapsed : null;
         appState.timer.currentSpeaker = nextSpeaker.id;
-        
+
         renderSpeakerQueue();
     } else {
         // Meeting finished
@@ -205,12 +220,7 @@ function finishMeeting() {
     if (!appState.currentMeeting) return;
 
     // Record final speaker time if meeting is active
-    const currentIndex = appState.currentMeeting.currentSpeakerIndex;
-    const currentSpeaker = appState.currentMeeting.speakers[currentIndex];
-    if (currentSpeaker && appState.timer.elapsed > 0) {
-        // Always record the elapsed time for the current speaker, regardless of timer state
-        currentSpeaker.timeSpent = Math.floor(appState.timer.elapsed / 1000);
-    }
+    syncCurrentSpeakerElapsed();
 
     // Stop timer
     appState.timer.isRunning = false;
@@ -654,7 +664,7 @@ function renderSpeakerQueue() {
             className += ' absent';
         } else if (index === currentIndex) {
             className += ' active';
-        } else if (index < currentIndex) {
+        } else if (speaker.timeSpent > 0) {
             className += ' completed';
         }
 
@@ -672,14 +682,16 @@ function renderSpeakerQueue() {
 
         return `
             <div class="${className}" ${clickHandler}>
-                <button class="attendance-toggle-btn ${speaker.isPresent ? 'present' : 'absent'}"
-                        onclick="event.stopPropagation(); toggleSpeakerAttendance(${index})"
-                        title="${speaker.isPresent ? 'Mark absent' : 'Mark present'}">
-                    ${speaker.isPresent ? 'Present' : 'Absent'}
-                </button>
+                <div class="speaker-top-row">
+                    <button class="attendance-toggle-btn ${speaker.isPresent ? 'present' : 'absent'}"
+                            onclick="event.stopPropagation(); toggleSpeakerAttendance(${index})"
+                            title="${speaker.isPresent ? 'Mark absent' : 'Mark present'}">
+                        ${speaker.isPresent ? 'Present' : 'Absent'}
+                    </button>
+                    <div class="speaker-time">${timeText}</div>
+                </div>
                 <div class="speaker-name">${speaker.name}</div>
                 <div class="speaker-team" style="color: ${getTeamColor(teamName)}">${teamName}</div>
-                <div class="speaker-time">${timeText}</div>
             </div>
         `;
     }).join('');
@@ -690,27 +702,30 @@ function renderSpeakerQueue() {
 }
 
 function jumpToSpeaker(index) {
-    if (!appState.currentMeeting || index < appState.currentMeeting.currentSpeakerIndex) return;
+    if (!appState.currentMeeting) return;
 
-    // Record time for current speaker if jumping ahead
-    const currentIndex = appState.currentMeeting.currentSpeakerIndex;
-    if (currentIndex < index) {
-        const currentSpeaker = appState.currentMeeting.speakers[currentIndex];
-        currentSpeaker.timeSpent = Math.floor(appState.timer.elapsed / 1000);
+    const selectedSpeaker = appState.currentMeeting.speakers[index];
+    if (!selectedSpeaker || !selectedSpeaker.isPresent) return;
+
+    syncCurrentSpeakerElapsed();
+
+    if (appState.currentMeeting.currentSpeakerIndex === index) {
+        renderSpeakerQueue();
+        return;
     }
 
-    // Jump to selected speaker
     appState.currentMeeting.currentSpeakerIndex = index;
-    appState.timer.startTime = Date.now();
-    appState.timer.elapsed = 0;
-    appState.timer.currentSpeaker = appState.currentMeeting.speakers[index].id;
+    appState.timer.currentSpeaker = selectedSpeaker.id;
+    appState.timer.elapsed = (selectedSpeaker.timeSpent || 0) * 1000;
 
-    // Resume timer if it was paused
-    if (!appState.timer.isRunning) {
-        appState.timer.isRunning = true;
-        document.getElementById('pause-btn').textContent = 'Pause';
+    if (appState.timer.isRunning) {
+        appState.timer.startTime = Date.now() - appState.timer.elapsed;
+    } else {
+        appState.timer.startTime = null;
+        document.getElementById('pause-btn').textContent = selectedSpeaker.timeSpent > 0 ? 'Resume' : 'Start';
     }
 
+    updateTimerDisplay();
     renderSpeakerQueue();
 }
 
@@ -785,6 +800,33 @@ function saveAttendance() {
             speaker.timeSpent = 0;
         }
     });
+
+    if (appState.timer.isRunning && appState.timer.startTime !== null) {
+        syncCurrentSpeakerElapsed();
+    }
+
+    const currentSpeaker = getCurrentSpeaker();
+    if (!currentSpeaker || !currentSpeaker.isPresent) {
+        const firstPresentIndex = appState.currentMeeting.speakers.findIndex(speaker => speaker.isPresent);
+        if (firstPresentIndex >= 0) {
+            appState.currentMeeting.currentSpeakerIndex = firstPresentIndex;
+            appState.timer.currentSpeaker = appState.currentMeeting.speakers[firstPresentIndex].id;
+            appState.timer.elapsed = (appState.currentMeeting.speakers[firstPresentIndex].timeSpent || 0) * 1000;
+            appState.timer.startTime = appState.timer.isRunning ? Date.now() - appState.timer.elapsed : null;
+        } else {
+            appState.timer.isRunning = false;
+            appState.timer.startTime = null;
+            appState.timer.elapsed = 0;
+            document.getElementById('pause-btn').textContent = 'Start';
+            document.getElementById('next-btn').disabled = true;
+        }
+    }
+
+    if (!appState.timer.isRunning) {
+        document.getElementById('pause-btn').textContent = (getCurrentSpeaker()?.timeSpent || 0) > 0 ? 'Resume' : 'Start';
+    }
+
+    updateTimerDisplay();
     
     // Update speaker queue display
     renderSpeakerQueue();
