@@ -163,11 +163,48 @@ h1 {
 .speaker-card {
     background: var(--background);
     border: 2px solid var(--border-color);
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1.5rem 1rem;
     border-radius: var(--border-radius-small);
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
+    min-width: 200px;
+}
+
+#speaker-list .speaker-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.speaker-team {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-top: 0.2rem;
+}
+
+.attendance-toggle-btn {
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+}
+
+.attendance-toggle-btn.present {
+    border-color: #059669;
+    color: #059669;
+}
+
+.attendance-toggle-btn.absent {
+    border-color: #dc2626;
+    color: #dc2626;
 }
 
 .speaker-card:hover {
@@ -193,6 +230,20 @@ h1 {
     border-color: var(--text-muted);
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+.speaker-card.active .speaker-name {
+    color: #ffffff;
+}
+
+.speaker-card.active .speaker-team {
+    color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.speaker-card.active .attendance-toggle-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
 }
 
 .speaker-time {
