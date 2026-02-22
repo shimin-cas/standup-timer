@@ -42,7 +42,8 @@ There is no `package.json`, no build tooling, no test runner, and no `.gitignore
 | Dependencies | **None** |
 | Build step | **None** |
 
-**Browser targets**: Chrome 60+, Firefox 55+, Safari 12+, Edge 79+.
+**Browser targets**: Chrome 80+, Firefox 74+, Safari 13.1+, Edge 80+.
+(The codebase uses optional chaining `?.` which sets these as the true minimums.)
 
 ---
 
@@ -276,7 +277,7 @@ All modals live in `index.html` as hidden `<div>` overlays. They are shown/hidde
 
 ## Data Persistence
 
-- **Storage keys**: members, templates, reports, and currentMeeting are each saved under their own `localStorage` key via `saveToStorage()`.
+- **Storage keys**: `standupMembers`, `standupTemplates`, `standupReports` — each saved under its own `localStorage` key via `saveToStorage()`. `currentMeeting` is held only in memory and is **not** persisted to `localStorage`.
 - **Capacity**: ~5–10 MB per origin. Estimates: ~1 KB/member, ~2 KB/report.
 - **No sync**: Data is local to the browser; there is no cloud sync.
 - **Backup**: Users export/import via CSV; there is no automatic backup mechanism.
