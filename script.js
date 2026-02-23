@@ -190,20 +190,29 @@ function nextSpeaker() {
 
     syncCurrentSpeakerElapsed();
 
+    const speakers = appState.currentMeeting.speakers;
     const currentIndex = appState.currentMeeting.currentSpeakerIndex;
 
-    // Move to next speaker
-    if (currentIndex < appState.currentMeeting.speakers.length - 1) {
-        appState.currentMeeting.currentSpeakerIndex++;
-        const nextSpeaker = appState.currentMeeting.speakers[appState.currentMeeting.currentSpeakerIndex];
+    // Find next present speaker after the current index
+    let nextIndex = -1;
+    for (let i = currentIndex + 1; i < speakers.length; i++) {
+        if (speakers[i].isPresent) {
+            nextIndex = i;
+            break;
+        }
+    }
 
-        appState.timer.elapsed = (nextSpeaker.timeSpent || 0) * 1000;
+    if (nextIndex >= 0) {
+        appState.currentMeeting.currentSpeakerIndex = nextIndex;
+        const nextSpkr = speakers[nextIndex];
+
+        appState.timer.elapsed = (nextSpkr.timeSpent || 0) * 1000;
         appState.timer.startTime = appState.timer.isRunning ? Date.now() - appState.timer.elapsed : null;
-        appState.timer.currentSpeaker = nextSpeaker.id;
+        appState.timer.currentSpeaker = nextSpkr.id;
 
         renderSpeakerQueue();
     } else {
-        // Meeting finished
+        // No more present speakers — meeting finished
         finishMeeting();
     }
 }
