@@ -88,20 +88,29 @@ function startMeeting() {
         templateId: templateId,
         templateName: template.name,
         startTime: new Date(),
-        speakers: template.members.map(memberId => {
-            const member = appState.members.find(m => m.id === memberId);
-            return {
-                id: memberId,
-                name: member.name,
-                email: member.email,
-                team: member.team || 'No Team',
-                timeSpent: 0,
-                isPresent: true
-            };
-        }),
+        speakers: template.members
+            .map(memberId => {
+                const member = appState.members.find(m => m.id === memberId);
+                if (!member) return null;
+                return {
+                    id: memberId,
+                    name: member.name,
+                    email: member.email,
+                    team: member.team || 'No Team',
+                    timeSpent: 0,
+                    isPresent: true
+                };
+            })
+            .filter(s => s !== null),
         currentSpeakerIndex: 0,
         isActive: true
     };
+
+    if (appState.currentMeeting.speakers.length === 0) {
+        alert('This template has no valid members. Please update the template.');
+        appState.currentMeeting = null;
+        return;
+    }
 
     // Reset timer state - don't start automatically
     appState.timer = {
@@ -890,7 +899,11 @@ function saveMember(e) {
 
     if (form.dataset.editId) {
         const index = appState.members.findIndex(m => m.id === form.dataset.editId);
-        appState.members[index] = member;
+        if (index >= 0) {
+            appState.members[index] = member;
+        } else {
+            appState.members.push(member);
+        }
     } else {
         appState.members.push(member);
     }
@@ -1158,7 +1171,11 @@ function saveTemplate(e) {
 
     if (form.dataset.editId) {
         const index = appState.templates.findIndex(t => t.id === form.dataset.editId);
-        appState.templates[index] = template;
+        if (index >= 0) {
+            appState.templates[index] = template;
+        } else {
+            appState.templates.push(template);
+        }
     } else {
         appState.templates.push(template);
     }
