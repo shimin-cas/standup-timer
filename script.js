@@ -1644,6 +1644,7 @@ function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('active');
 }
 
+// Save to localStorage
 function saveToStorage(key, data) {
     localStorage.setItem(key, JSON.stringify(data));
 }
