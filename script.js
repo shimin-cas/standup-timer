@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
+    initTheme();
     setupEventListeners();
     renderTeamList();
     renderTemplateList();
@@ -29,11 +30,41 @@ function initializeApp() {
     updateTemplateSelect();
 }
 
+function initTheme() {
+    const saved = localStorage.getItem('standupTheme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (saved === 'dark' || (!saved && prefersDark)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        updateToggleLabel(true);
+    }
+}
+
+function toggleDarkMode() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('standupTheme', 'light');
+        updateToggleLabel(false);
+    } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('standupTheme', 'dark');
+        updateToggleLabel(true);
+    }
+}
+
+function updateToggleLabel(isDark) {
+    const label = document.querySelector('.dark-mode-toggle .toggle-label');
+    if (label) label.textContent = isDark ? 'Light' : 'Dark';
+}
+
 function setupEventListeners() {
     // Navigation
     document.querySelectorAll('.nav-tab').forEach(tab => {
         tab.addEventListener('click', (e) => switchTab(e.target.dataset.tab));
     });
+
+    // Dark mode toggle
+    document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
 
     // Timer controls
     document.getElementById('start-meeting').addEventListener('click', startMeeting);
